@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "BDS - Business Data Scraper",
+  "version": "1.0",
+  "description": "BDS (Business Data Scraper) - Extract business data from Google search results.",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "http://localhost:8000/*"
+  ],
+  "action": {
+    "default_popup": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
