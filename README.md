@@ -1,87 +1,34 @@
-# BDS - Business Data Scraper
+# BDS PRO - Advanced Data Scraper
 
-A complete Chrome Extension and Django Backend system for business data extraction from Google search results.
+A scalable, production-ready data scraping system consisting of a React-based Chrome Extension and a Python Service Layer using Playwright.
 
-## 🚀 Features
-- **Keyword Search**: Search for businesses by keyword, country, and city.
-- **Smart Extraction**: Detects Ads, Organic results, and Maps listings.
-- **Backend Enrichment**: Automatically visits found websites to extract emails and phone numbers.
-- **Excel Export**: Download structured data in Excel format (.xlsx).
-- **Search History**: Keep track of previous scraping sessions.
+## 🏗️ System Architecture
 
-## 🛠️ Tech Stack
-- **Frontend**: React, Tailwind CSS, Vite, Axios, Lucide Icons.
-- **Backend**: Python, Django, Django REST Framework, BeautifulSoup, Pandas.
-- **Database**: SQLite (Production-ready for PostgreSQL).
+The system follows a clean 3-layer architecture:
+1. **Client Layer (Chrome Extension)**: Captures URL, accepts user input (City/Pincode), and triggers the process.
+2. **Service Layer (Backend API)**: Stateless Django API that orchestrates the scraping and CSV generation.
+3. **Automation Layer (Scraping Engine)**: Playwright-powered engine with generic heuristics for extracting business data from any website.
 
-## 🔐 Environment Configuration
+## 🚀 Key Features
+- **Generic Extraction**: Works on any directory or listing platform.
+- **Playwright Powered**: Handles dynamic content and lazy loading with ease.
+- **Stateless Design**: No database overhead for the core scraping flow.
+- **CSV Output**: Generates a clean CSV with exact columns: `Company Name`, `Address`.
+- **City & Pincode Filter**: Match results specifically to the user's target area.
 
-Both the backend and frontend use `.env` files for configuration.
+## 📋 Quick Start
+For detailed setup instructions, please refer to [SETUP.md](file:///d:/PROJECT2/SETUP.md).
 
-### Backend (.env)
-Create `backend/.env` with:
-```env
-SECRET_KEY=your-secret-key
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=sqlite:///db.sqlite3
-CORS_ALLOW_ALL_ORIGINS=True
-CELERY_BROKER_URL=redis://localhost:6379/0
-CELERY_RESULT_BACKEND=redis://localhost:6379/0
-```
+1. **Start Backend**: Run `python manage.py runserver` in the `backend` folder.
+2. **Build Extension**: Run `npm run build` in the `extension` folder.
+3. **Load Extension**: Load `extension/dist` as an unpacked extension in Chrome.
 
-### Extension (.env)
-Create `extension/.env` with:
-```env
-VITE_API_BASE_URL=http://localhost:8000/api
-```
-
-## 📋 Setup Guide
-
-### 1. Backend Setup
-1. Open a terminal in the `backend` directory.
-2. Activate the virtual environment:
-   ```powershell
-   .\venv\Scripts\activate
-   ```
-3. Run migrations:
-   ```powershell
-   python manage.py migrate
-   ```
-4. Start the Django server:
-   ```powershell
-   python manage.py runserver
-   ```
-   The backend will be available at `http://localhost:8000`.
-
-### 2. Extension Setup
-1. Open a terminal in the `extension` directory.
-2. Install dependencies:
-   ```powershell
-   npm install
-   ```
-3. Build the extension:
-   ```powershell
-   npm run build
-   ```
-4. Load the extension in Chrome:
-   - Go to `chrome://extensions/`
-   - Enable **Developer mode**.
-   - Click **Load unpacked**.
-   - Select the `extension/dist` folder.
-
-### 3. Usage
-1. Click the extension icon in your browser.
-2. Enter a keyword (e.g., "kitchen ware suppliers").
-3. Select a country and enter a city (e.g., "Rajkot").
-4. Click **Start Scraping**.
-5. Once finished, click **Download Excel**.
-
-## 🧪 Sample Output (Excel)
-| Company Name | Website URL | Email | Phone | Source Platform | Location |
-|--------------|-------------|-------|-------|-----------------|----------|
-| Kitchen Hub  | https://... | info@kh.com | +91 98... | Organic | Rajkot, India |
-| Steel Wares  | https://... | sales@sw.in | +91 28... | Ad | Rajkot, India |
+## 🔄 Workflow
+1. User searches for a product on any website.
+2. User opens the BDS PRO extension.
+3. User enters the target City.
+4. User clicks **Extract & Download**.
+5. Extension receives the CSV from the backend and triggers a download.
 
 ---
-**Note**: This tool is for educational purposes. Always respect website terms of service and robots.txt.
+**Note**: Ensure you have Playwright browsers installed (`playwright install chromium`) before running the backend.

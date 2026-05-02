@@ -1,8 +1,7 @@
 from django.urls import path
-from .views import ScrapeUrlView, ExportCSVView, SessionHistoryView
+from .views import ScrapeUrlView, HistoryPlaceholderView
 
 urlpatterns = [
-    path('scrape-url/', ScrapeUrlView.as_view(), name='scrape_url'),
-    path('export-csv/<int:session_id>/', ExportCSVView.as_view(), name='export_csv'),
-    path('history/', SessionHistoryView.as_view(), name='history'),
+    path('scrape/', ScrapeUrlView.as_view(), name='scrape'),
+    path('history/', HistoryPlaceholderView.as_view(), name='history'),
 ]

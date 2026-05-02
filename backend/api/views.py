@@ -1,96 +1,47 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import SearchSession, ScrapedData
-from .serializers import SearchSessionSerializer
+import logging
 from .scraper_utils import run_playwright_scraper
-from django.http import HttpResponse
-import pandas as pd
-import io
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 class ScrapeUrlView(APIView):
     """
-    Triggers Playwright scraping on the backend for a given URL.
+    Service Layer: Orchestrates Max-Capture scraping.
     """
     def post(self, request):
         url = request.data.get('url')
-        city = request.data.get('city', '')
-        pincode = request.data.get('pincode', '')
+        city = request.data.get('city', '').strip()
+        pincode = request.data.get('pincode', '').strip()
         
         if not url:
-            return Response({"error": "URL is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Target URL is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. Run Playwright Scraper
-        results = run_playwright_scraper(url, city_filter=city, pincode_filter=pincode)
+        logger.info(f"--- Processing Max-Capture Scrape ---")
+        logger.info(f"URL: {url}, City: {city}")
 
-        if not results:
-            return Response({"error": "No business data found matching your filters on this page."}, status=status.HTTP_404_NOT_FOUND)
-
-        # 2. Save to Database for history
-        session = SearchSession.objects.create(
-            keyword="Web Scraping",
-            directory=url.split('//')[-1].split('/')[0],
-            city=city,
-            pincode=pincode
-        )
-
-        for res in results:
-            ScrapedData.objects.create(
-                session=session,
-                company_name=res.get('Company Name', 'N/A'),
-                address=res.get('Address', 'N/A')
-            )
-
-        # 3. Generate CSV
-        df = pd.DataFrame(results)
-        output = io.StringIO()
-        df.to_csv(output, index=False)
-        output.seek(0)
-
-        # 4. Return CSV directly
-        response = HttpResponse(
-            output.getvalue(),
-            content_type='text/csv'
-        )
-        response['Content-Disposition'] = f'attachment; filename="BDS_Data_{city or "Export"}.csv"'
-        response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-        response['X-Session-ID'] = str(session.id)
-        
-        return response
-
-class ExportCSVView(APIView):
-    """
-    Exports existing session data as CSV.
-    """
-    def get(self, request, session_id):
         try:
-            session = SearchSession.objects.get(id=session_id)
-            results = ScrapedData.objects.filter(session=session)
+            results = run_playwright_scraper(url, city_filter=city, pincode_filter=pincode)
             
-            data = []
-            for res in results:
-                data.append({
-                    "Company Name": res.company_name,
-                    "Address": res.address
-                })
+            if not results:
+                return Response({
+                    "error": f"No businesses found matching '{city}' on this page. Try searching without the city name on the website first.",
+                    "results": [],
+                    "count": 0
+                }, status=status.HTTP_200_OK)
 
-            df = pd.DataFrame(data)
-            output = io.StringIO()
-            df.to_csv(output, index=False)
-            output.seek(0)
+            return Response({
+                "message": f"Successfully extracted {len(results)} records.",
+                "results": results,
+                "count": len(results)
+            }, status=status.HTTP_200_OK)
 
-            response = HttpResponse(
-                output.getvalue(),
-                content_type='text/csv'
-            )
-            response['Content-Disposition'] = f'attachment; filename="BDS_Data_{session_id}.csv"'
-            response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-            return response
-        except SearchSession.DoesNotExist:
-            return Response({"error": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Critical Error: {str(e)}")
+            return Response({"error": "Analysis failed. The website might be blocking automated access."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class SessionHistoryView(APIView):
+class HistoryPlaceholderView(APIView):
     def get(self, request):
-        sessions = SearchSession.objects.all().order_by('-created_at')
-        serializer = SearchSessionSerializer(sessions, many=True)
-        return Response(serializer.data)
+        return Response({"message": "Stateless mode active."})
